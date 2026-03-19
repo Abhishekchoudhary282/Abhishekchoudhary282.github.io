@@ -28,7 +28,7 @@ class Particle {
 
     draw() {
         // Updated to match the cool cyan/mint accent color
-        ctx.fillStyle = 'rgba(0, 255, 204, 0.4)'; 
+        ctx.fillStyle = 'rgba(0, 191, 255, 0.4)'; 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.closePath();
@@ -75,7 +75,7 @@ function connect() {
 
             if (distance < (width/12) * (height/12)) {
                 opacityValue = 1 - (distance / 12000);
-                ctx.strokeStyle = `rgba(0, 255, 204, ${opacityValue * 0.15})`;
+                ctx.strokeStyle = `rgba(0, 191, 255, ${opacityValue * 0.15})`;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(particles[a].x, particles[a].y);
