@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 
 let width, height;
 let particles = [];
-const mouse = { x: null, y: null, radius: 180 }; // Increased radius for better interaction
+const mouse = { x: null, y: null, radius: 180 }; 
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -27,7 +27,7 @@ class Particle {
     }
 
     draw() {
-        // Updated to match the cool cyan/mint accent color
+        // SKY BLUE PARTICLES
         ctx.fillStyle = 'rgba(0, 191, 255, 0.4)'; 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -50,7 +50,7 @@ class Particle {
             const forceDirectionX = dx / distance;
             const forceDirectionY = dy / distance;
             const force = (mouse.radius - distance) / mouse.radius;
-            this.x -= forceDirectionX * force * 1.5; // Adds a bit more push
+            this.x -= forceDirectionX * force * 1.5; 
             this.y -= forceDirectionY * force * 1.5;
         }
         this.draw();
@@ -75,6 +75,7 @@ function connect() {
 
             if (distance < (width/12) * (height/12)) {
                 opacityValue = 1 - (distance / 12000);
+                // SKY BLUE CONNECTING LINES
                 ctx.strokeStyle = `rgba(0, 191, 255, ${opacityValue * 0.15})`;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -98,17 +99,13 @@ function animate() {
 init();
 animate();
 
-
-// --- NEW: SCROLL REVEAL ANIMATION LOGIC ---
-// This observes elements and adds the 'active' class when they enter the screen
+// SCROLL REVEAL ANIMATION LOGIC
 function reveal() {
     var reveals = document.querySelectorAll(".reveal");
-
     for (var i = 0; i < reveals.length; i++) {
         var windowHeight = window.innerHeight;
         var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 100; // Triggers when element is 100px into view
-
+        var elementVisible = 50; 
         if (elementTop < windowHeight - elementVisible) {
             reveals[i].classList.add("active");
         }
@@ -116,5 +113,4 @@ function reveal() {
 }
 
 window.addEventListener("scroll", reveal);
-// Trigger once on load to reveal elements already in view
 reveal();
