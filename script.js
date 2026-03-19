@@ -1,15 +1,83 @@
+// --- 1. CUSTOM FLUID CURSOR ---
+const cursorDot = document.querySelector('.cursor-dot');
+const cursorOutline = document.querySelector('.cursor-outline');
+let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let outline = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    
+    // Instant dot movement
+    cursorDot.style.left = `${mouse.x}px`;
+    cursorDot.style.top = `${mouse.y}px`;
+});
+
+// Smooth outline trailing loop
+function renderCursor() {
+    outline.x += (mouse.x - outline.x) * 0.15; // The trailing physics
+    outline.y += (mouse.y - outline.y) * 0.15;
+    cursorOutline.style.left = `${outline.x}px`;
+    cursorOutline.style.top = `${outline.y}px`;
+    requestAnimationFrame(renderCursor);
+}
+renderCursor();
+
+// --- 2. MAGNETIC ELEMENTS (Buttons & Logos) ---
+const magnetics = document.querySelectorAll('.magnetic');
+magnetics.forEach(btn => {
+    btn.addEventListener('mousemove', function(e) {
+        const position = btn.getBoundingClientRect();
+        const x = e.pageX - position.left - position.width / 2;
+        const y = e.pageY - position.top - position.height / 2;
+        
+        btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+        cursorOutline.style.transform = `translate(-50%, -50%) scale(1.5)`;
+        cursorOutline.style.backgroundColor = 'rgba(0, 229, 255, 0.1)';
+    });
+    btn.addEventListener('mouseout', function() {
+        btn.style.transform = `translate(0px, 0px)`;
+        cursorOutline.style.transform = `translate(-50%, -50%) scale(1)`;
+        cursorOutline.style.backgroundColor = 'transparent';
+    });
+});
+
+// --- 3. 3D CARD TILT & DYNAMIC GLOW ---
+const cards = document.querySelectorAll('.tilt-card');
+cards.forEach(card => {
+    const glow = card.querySelector('.card-glow');
+    
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left; // x position within the element.
+        const y = e.clientY - rect.top;  // y position within the element.
+        
+        // Move the glow to follow mouse
+        if(glow) {
+            glow.style.left = `${x}px`;
+            glow.style.top = `${y}px`;
+        }
+
+        // Calculate 3D rotation
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -5; // Max rotation 5deg
+        const rotateY = ((x - centerX) / centerX) * 5;
+        
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+    });
+});
+
+// --- 4. ADVANCED 3D WEBGL-STYLE CANVAS PARTICLES ---
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
-
 let width, height;
 let particles = [];
-const mouse = { x: null, y: null, radius: 200 }; 
-
-// --- NEW: Scroll Tracking Variables ---
-let scrollY = 0;
-let scrollPercent = 0;
-let scrollVelocity = 0;
-let lastScrollY = window.scrollY;
+let scrollY = window.scrollY;
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -18,144 +86,93 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.x;
-    mouse.y = e.y;
-});
+window.addEventListener('scroll', () => { scrollY = window.scrollY; });
 
-// --- NEW: Track Scroll Depth and Speed ---
-window.addEventListener('scroll', () => {
-    scrollY = window.scrollY;
-    
-    // Calculate how far down the page we are (0.0 to 1.0)
-    let documentHeight = document.documentElement.scrollHeight - window.innerHeight;
-    scrollPercent = documentHeight > 0 ? scrollY / documentHeight : 0;
-    
-    // Calculate how fast we are scrolling
-    scrollVelocity = scrollY - lastScrollY;
-    lastScrollY = scrollY;
-});
-
-class Particle {
+class Particle3D {
     constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.size = Math.random() * 2.5 + 1.5; // Made particles slightly larger
-        this.baseVx = (Math.random() - 0.5) * 0.8;
-        this.baseVy = (Math.random() - 0.5) * 0.8;
-        this.vx = this.baseVx;
-        this.vy = this.baseVy;
+        this.z = Math.random() * 1000 + 100; // Depth coordinate
+        this.baseSize = Math.random() * 3 + 1;
+        
+        // Flow field velocity
+        this.vx = (Math.random() - 0.5) * 1;
+        this.vy = (Math.random() - 0.5) * 1;
     }
 
-    draw(color) {
-        ctx.fillStyle = color; 
+    update() {
+        // Parallax effect on Z-axis based on scroll
+        let screenY = this.y - (scrollY * (1000 / this.z) * 0.3);
+        
+        // Movement
+        this.x += this.vx * (1000 / this.z); // Objects closer (lower Z) move faster
+        
+        // Wrapping
+        if (this.x > width + 100) this.x = -100;
+        if (this.x < -100) this.x = width + 100;
+        
+        // Wrap Y taking scroll into account
+        if (screenY > height + 100) this.y -= (height + 200);
+        if (screenY < -100) this.y += (height + 200);
+
+        // Perspective Projection scale
+        let scale = 1000 / this.z;
+        let drawX = this.x;
+        let drawY = screenY;
+        let drawSize = this.baseSize * scale;
+
+        // Draw Particle with composite blooming
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = `rgba(0, 229, 255, ${0.8 * scale})`; 
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.closePath();
+        ctx.arc(drawX, drawY, drawSize, 0, Math.PI * 2);
         ctx.fill();
-    }
 
-    update(color) {
-        // --- NEW: Physics reacting to scroll wheel ---
-        let addedVelocityY = scrollVelocity * 0.1; 
-        
-        this.x += this.vx;
-        this.y += this.vy - addedVelocityY; // Pushes particles when you scroll
-
-        // Screen wrap constraints
-        if (this.x < 0 || this.x > width) this.vx = -this.vx;
-        if (this.y < -100) this.y = height + 100;
-        if (this.y > height + 100) this.y = -100;
-
-        // Mouse repel physics
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance < mouse.radius) {
-            const forceDirectionX = dx / distance;
-            const forceDirectionY = dy / distance;
-            const force = (mouse.radius - distance) / mouse.radius;
-            this.x -= forceDirectionX * force * 2; 
-            this.y -= forceDirectionY * force * 2;
+        // Mouse interaction (Z-depth aware)
+        let dx = mouse.x - drawX;
+        let dy = mouse.y - drawY;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < 150 * scale) {
+            ctx.strokeStyle = `rgba(255, 0, 127, ${1 - dist/(150*scale)})`;
+            ctx.lineWidth = 2 * scale;
+            ctx.beginPath();
+            ctx.moveTo(drawX, drawY);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
         }
-        this.draw(color);
     }
 }
 
-function init() {
+function initCanvas() {
     particles = [];
-    // Made the network denser for better visibility
-    let numberOfParticles = (width * height) / 7000; 
-    for (let i = 0; i < numberOfParticles; i++) {
-        particles.push(new Particle());
+    let particleCount = window.innerWidth < 768 ? 50 : 150; // Optimized for mobile
+    for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle3D());
     }
 }
 
-function connect(r, g, b) {
-    let opacityValue = 1;
-    // --- NEW: The network lines reach further the deeper you scroll ---
-    let maxDistance = (width/10) * (height/10) + (scrollPercent * 6000); 
-
-    for (let a = 0; a < particles.length; a++) {
-        for (let b = a; b < particles.length; b++) {
-            let dx = particles[a].x - particles[b].x;
-            let dy = particles[a].y - particles[b].y;
-            let distance = dx * dx + dy * dy;
-
-            if (distance < maxDistance) {
-                opacityValue = 1 - (distance / maxDistance);
-                // Significantly brightened the lines
-                ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacityValue * 0.5})`;
-                ctx.lineWidth = 1.5; // Thicker lines
-                ctx.beginPath();
-                ctx.moveTo(particles[a].x, particles[a].y);
-                ctx.lineTo(particles[b].x, particles[b].y);
-                ctx.stroke();
-            }
-        }
-    }
-}
-
-function animate() {
+function animateCanvas() {
     ctx.clearRect(0, 0, width, height);
-    
-    // Smoothly decay the scroll push effect
-    scrollVelocity *= 0.9;
-
-    // --- NEW: Dynamic Color Math ---
-    // Transitions from Sky Blue (Top) to Cyberpunk Pink/Red (Bottom)
-    let r = Math.floor(0 + (scrollPercent * 255));
-    let g = Math.floor(191 - (scrollPercent * 140));
-    let b = Math.floor(255 - (scrollPercent * 153));
-    
-    let dynamicColor = `rgba(${r}, ${g}, ${b}, 0.8)`; 
-
     for (let i = 0; i < particles.length; i++) {
-        particles[i].update(dynamicColor);
+        particles[i].update();
     }
-    connect(r, g, b);
-    
-    requestAnimationFrame(animate);
+    requestAnimationFrame(animateCanvas);
 }
+initCanvas();
+animateCanvas();
 
-init();
-animate();
-
-// --- MULTI-DIRECTIONAL SCROLL REVEAL ---
+// --- 5. SCROLL OBSERVER (Triggers CSS Animations) ---
 function reveal() {
-    var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-zoom");
-    
+    var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-3d");
     for (var i = 0; i < reveals.length; i++) {
         var windowHeight = window.innerHeight;
         var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 50; 
+        var elementVisible = 100; // Only trigger when fully in view
         
         if (elementTop < windowHeight - elementVisible) {
             reveals[i].classList.add("active");
         }
     }
 }
-
 window.addEventListener("scroll", reveal);
 reveal();
