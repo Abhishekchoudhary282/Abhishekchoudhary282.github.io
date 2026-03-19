@@ -1,83 +1,11 @@
-// --- 1. CUSTOM FLUID CURSOR ---
-const cursorDot = document.querySelector('.cursor-dot');
-const cursorOutline = document.querySelector('.cursor-outline');
-let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-let outline = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+/* --- Replace your entire script.js with this refined version --- */
 
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    
-    // Instant dot movement
-    cursorDot.style.left = `${mouse.x}px`;
-    cursorDot.style.top = `${mouse.y}px`;
-});
-
-// Smooth outline trailing loop
-function renderCursor() {
-    outline.x += (mouse.x - outline.x) * 0.15; // The trailing physics
-    outline.y += (mouse.y - outline.y) * 0.15;
-    cursorOutline.style.left = `${outline.x}px`;
-    cursorOutline.style.top = `${outline.y}px`;
-    requestAnimationFrame(renderCursor);
-}
-renderCursor();
-
-// --- 2. MAGNETIC ELEMENTS (Buttons & Logos) ---
-const magnetics = document.querySelectorAll('.magnetic');
-magnetics.forEach(btn => {
-    btn.addEventListener('mousemove', function(e) {
-        const position = btn.getBoundingClientRect();
-        const x = e.pageX - position.left - position.width / 2;
-        const y = e.pageY - position.top - position.height / 2;
-        
-        btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
-        cursorOutline.style.transform = `translate(-50%, -50%) scale(1.5)`;
-        cursorOutline.style.backgroundColor = 'rgba(0, 229, 255, 0.1)';
-    });
-    btn.addEventListener('mouseout', function() {
-        btn.style.transform = `translate(0px, 0px)`;
-        cursorOutline.style.transform = `translate(-50%, -50%) scale(1)`;
-        cursorOutline.style.backgroundColor = 'transparent';
-    });
-});
-
-// --- 3. 3D CARD TILT & DYNAMIC GLOW ---
-const cards = document.querySelectorAll('.tilt-card');
-cards.forEach(card => {
-    const glow = card.querySelector('.card-glow');
-    
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left; // x position within the element.
-        const y = e.clientY - rect.top;  // y position within the element.
-        
-        // Move the glow to follow mouse
-        if(glow) {
-            glow.style.left = `${x}px`;
-            glow.style.top = `${y}px`;
-        }
-
-        // Calculate 3D rotation
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = ((y - centerY) / centerY) * -5; // Max rotation 5deg
-        const rotateY = ((x - centerX) / centerX) * 5;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-    });
-
-    card.addEventListener('mouseleave', () => {
-        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
-    });
-});
-
-// --- 4. ADVANCED 3D WEBGL-STYLE CANVAS PARTICLES ---
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
 let width, height;
 let particles = [];
-let scrollY = window.scrollY;
+let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -86,93 +14,128 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
 
-class Particle3D {
+// Custom Cursor Smooth Trailing
+const cursorDot = document.querySelector('.cursor-dot');
+const cursorOutline = document.querySelector('.cursor-outline');
+
+function updateCursor() {
+    cursor.x += (mouse.x - cursor.x) * 0.1;
+    cursor.y += (mouse.y - cursor.y) * 0.1;
+    
+    if(cursorDot) {
+        cursorDot.style.transform = `translate(${mouse.x}px, ${mouse.y}px)`;
+    }
+    if(cursorOutline) {
+        cursorOutline.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+    }
+    requestAnimationFrame(updateCursor);
+}
+updateCursor();
+
+class Particle {
     constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.z = Math.random() * 1000 + 100; // Depth coordinate
-        this.baseSize = Math.random() * 3 + 1;
-        
-        // Flow field velocity
-        this.vx = (Math.random() - 0.5) * 1;
-        this.vy = (Math.random() - 0.5) * 1;
+        this.size = Math.random() * 1.5 + 0.5; // Thinner particles
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        // Random offset for "string" attachment so it's not always the center
+        this.offsetX = (Math.random() - 0.5) * 15;
+        this.offsetY = (Math.random() - 0.5) * 15;
+    }
+
+    draw() {
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.3)'; // Light Grey
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     update() {
-        // Parallax effect on Z-axis based on scroll
-        let screenY = this.y - (scrollY * (1000 / this.z) * 0.3);
-        
-        // Movement
-        this.x += this.vx * (1000 / this.z); // Objects closer (lower Z) move faster
-        
-        // Wrapping
-        if (this.x > width + 100) this.x = -100;
-        if (this.x < -100) this.x = width + 100;
-        
-        // Wrap Y taking scroll into account
-        if (screenY > height + 100) this.y -= (height + 200);
-        if (screenY < -100) this.y += (height + 200);
+        this.x += this.vx;
+        this.y += this.vy;
 
-        // Perspective Projection scale
-        let scale = 1000 / this.z;
-        let drawX = this.x;
-        let drawY = screenY;
-        let drawSize = this.baseSize * scale;
+        if (this.x < 0 || this.x > width) this.vx = -this.vx;
+        if (this.y < 0 || this.y > height) this.vy = -this.vy;
 
-        // Draw Particle with composite blooming
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = `rgba(0, 229, 255, ${0.8 * scale})`; 
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, drawSize, 0, Math.PI * 2);
-        ctx.fill();
+        // Interactive "String" connection to cursor
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Mouse interaction (Z-depth aware)
-        let dx = mouse.x - drawX;
-        let dy = mouse.y - drawY;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < 150 * scale) {
-            ctx.strokeStyle = `rgba(255, 0, 127, ${1 - dist/(150*scale)})`;
-            ctx.lineWidth = 2 * scale;
+        if (distance < 250) {
             ctx.beginPath();
-            ctx.moveTo(drawX, drawY);
+            // Connects to a random point near the particle for a "hand-drawn" technical feel
+            ctx.moveTo(this.x + this.offsetX, this.y + this.offsetY);
             ctx.lineTo(mouse.x, mouse.y);
+            
+            // UI/UX Refinement: Thinner lines (0.3) and Light Grey low opacity
+            ctx.strokeStyle = `rgba(200, 200, 200, ${0.15 * (1 - distance / 250)})`;
+            ctx.lineWidth = 0.5; 
             ctx.stroke();
+            
+            // Subtle pull effect
+            this.x += dx * 0.01;
+            this.y += dy * 0.01;
         }
+
+        this.draw();
     }
 }
 
-function initCanvas() {
+function init() {
     particles = [];
-    let particleCount = window.innerWidth < 768 ? 50 : 150; // Optimized for mobile
-    for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle3D());
+    let count = (width * height) / 12000;
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle());
     }
 }
 
-function animateCanvas() {
+function animate() {
     ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-    }
-    requestAnimationFrame(animateCanvas);
+    particles.forEach(p => p.update());
+    requestAnimationFrame(animate);
 }
-initCanvas();
-animateCanvas();
 
-// --- 5. SCROLL OBSERVER (Triggers CSS Animations) ---
-function reveal() {
-    var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-3d");
-    for (var i = 0; i < reveals.length; i++) {
-        var windowHeight = window.innerHeight;
-        var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 100; // Only trigger when fully in view
+init();
+animate();
+
+// --- 3D TILT & MAGNETIC CARD EFFECT ---
+const cards = document.querySelectorAll('.tilt-card');
+cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
         
-        if (elementTop < windowHeight - elementVisible) {
-            reveals[i].classList.add("active");
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Tilt math
+        const rotateX = (y - centerY) / 20;
+        const rotateY = (centerX - x) / 20;
+        
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+});
+
+// Scroll Reveal Logic
+const observerOptions = { threshold: 0.1 };
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
         }
-    }
-}
-window.addEventListener("scroll", reveal);
-reveal();
+    });
+}, observerOptions);
+
+document.querySelectorAll('.reveal-up, .reveal-3d, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
