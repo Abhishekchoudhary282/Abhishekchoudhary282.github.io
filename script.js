@@ -17,6 +17,13 @@ window.addEventListener('mousemove', (e) => {
     mouse.y = e.y;
 });
 
+// --- NEW: PARALLAX BACKGROUND EFFECT ---
+// This moves the canvas downwards slightly as you scroll, creating 3D depth
+window.addEventListener('scroll', () => {
+    let scrollPosition = window.scrollY;
+    canvas.style.transform = `translateY(${scrollPosition * 0.4}px)`;
+});
+
 class Particle {
     constructor() {
         this.x = Math.random() * width;
@@ -99,13 +106,16 @@ function animate() {
 init();
 animate();
 
-// SCROLL REVEAL ANIMATION LOGIC
+// --- UPDATED MULTI-DIRECTIONAL SCROLL REVEAL ---
 function reveal() {
-    var reveals = document.querySelectorAll(".reveal");
+    // Selects all the different animation classes
+    var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-zoom");
+    
     for (var i = 0; i < reveals.length; i++) {
         var windowHeight = window.innerHeight;
         var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 50; 
+        var elementVisible = 50; // Triggers when element is slightly into view
+        
         if (elementTop < windowHeight - elementVisible) {
             reveals[i].classList.add("active");
         }
@@ -113,4 +123,4 @@ function reveal() {
 }
 
 window.addEventListener("scroll", reveal);
-reveal();
+reveal(); // Triggers once on page load to reveal the hero section
