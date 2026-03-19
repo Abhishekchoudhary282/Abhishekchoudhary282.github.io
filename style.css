@@ -16,7 +16,7 @@ html {
 body { background-color: var(--bg-color); color: var(--text-color); overflow-x: hidden; }
 
 /* Interactive Canvas - Full opacity so JS can control brightness */
-#bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; opacity: 1; }
+#bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; opacity: 0.8; }
 
 nav {
     display: flex; justify-content: space-between; padding: 1.5rem 5%;
