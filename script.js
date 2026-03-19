@@ -27,7 +27,7 @@ class Particle {
     }
 
     draw() {
-        ctx.fillStyle = 'rgba(255, 51, 102, 0.5)'; // Matches the CSS accent color
+        ctx.fillStyle = 'rgba(255, 51, 102, 0.5)';
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.closePath();
