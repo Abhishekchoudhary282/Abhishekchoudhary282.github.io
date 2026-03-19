@@ -3,7 +3,13 @@ const ctx = canvas.getContext('2d');
 
 let width, height;
 let particles = [];
-const mouse = { x: null, y: null, radius: 180 }; 
+const mouse = { x: null, y: null, radius: 200 }; 
+
+// --- NEW: Scroll Tracking Variables ---
+let scrollY = 0;
+let scrollPercent = 0;
+let scrollVelocity = 0;
+let lastScrollY = window.scrollY;
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -17,38 +23,51 @@ window.addEventListener('mousemove', (e) => {
     mouse.y = e.y;
 });
 
-// --- NEW: PARALLAX BACKGROUND EFFECT ---
-// This moves the canvas downwards slightly as you scroll, creating 3D depth
+// --- NEW: Track Scroll Depth and Speed ---
 window.addEventListener('scroll', () => {
-    let scrollPosition = window.scrollY;
-    canvas.style.transform = `translateY(${scrollPosition * 0.4}px)`;
+    scrollY = window.scrollY;
+    
+    // Calculate how far down the page we are (0.0 to 1.0)
+    let documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+    scrollPercent = documentHeight > 0 ? scrollY / documentHeight : 0;
+    
+    // Calculate how fast we are scrolling
+    scrollVelocity = scrollY - lastScrollY;
+    lastScrollY = scrollY;
 });
 
 class Particle {
     constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.size = Math.random() * 2 + 1;
-        this.vx = (Math.random() - 0.5) * 0.5;
-        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2.5 + 1.5; // Made particles slightly larger
+        this.baseVx = (Math.random() - 0.5) * 0.8;
+        this.baseVy = (Math.random() - 0.5) * 0.8;
+        this.vx = this.baseVx;
+        this.vy = this.baseVy;
     }
 
-    draw() {
-        // SKY BLUE PARTICLES
-        ctx.fillStyle = 'rgba(0, 191, 255, 0.4)'; 
+    draw(color) {
+        ctx.fillStyle = color; 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
     }
 
-    update() {
+    update(color) {
+        // --- NEW: Physics reacting to scroll wheel ---
+        let addedVelocityY = scrollVelocity * 0.1; 
+        
         this.x += this.vx;
-        this.y += this.vy;
+        this.y += this.vy - addedVelocityY; // Pushes particles when you scroll
 
+        // Screen wrap constraints
         if (this.x < 0 || this.x > width) this.vx = -this.vx;
-        if (this.y < 0 || this.y > height) this.vy = -this.vy;
+        if (this.y < -100) this.y = height + 100;
+        if (this.y > height + 100) this.y = -100;
 
+        // Mouse repel physics
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
@@ -57,34 +76,38 @@ class Particle {
             const forceDirectionX = dx / distance;
             const forceDirectionY = dy / distance;
             const force = (mouse.radius - distance) / mouse.radius;
-            this.x -= forceDirectionX * force * 1.5; 
-            this.y -= forceDirectionY * force * 1.5;
+            this.x -= forceDirectionX * force * 2; 
+            this.y -= forceDirectionY * force * 2;
         }
-        this.draw();
+        this.draw(color);
     }
 }
 
 function init() {
     particles = [];
-    let numberOfParticles = (width * height) / 10000; 
+    // Made the network denser for better visibility
+    let numberOfParticles = (width * height) / 7000; 
     for (let i = 0; i < numberOfParticles; i++) {
         particles.push(new Particle());
     }
 }
 
-function connect() {
+function connect(r, g, b) {
     let opacityValue = 1;
+    // --- NEW: The network lines reach further the deeper you scroll ---
+    let maxDistance = (width/10) * (height/10) + (scrollPercent * 6000); 
+
     for (let a = 0; a < particles.length; a++) {
         for (let b = a; b < particles.length; b++) {
             let dx = particles[a].x - particles[b].x;
             let dy = particles[a].y - particles[b].y;
             let distance = dx * dx + dy * dy;
 
-            if (distance < (width/12) * (height/12)) {
-                opacityValue = 1 - (distance / 12000);
-                // SKY BLUE CONNECTING LINES
-                ctx.strokeStyle = `rgba(0, 191, 255, ${opacityValue * 0.15})`;
-                ctx.lineWidth = 1;
+            if (distance < maxDistance) {
+                opacityValue = 1 - (distance / maxDistance);
+                // Significantly brightened the lines
+                ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacityValue * 0.5})`;
+                ctx.lineWidth = 1.5; // Thicker lines
                 ctx.beginPath();
                 ctx.moveTo(particles[a].x, particles[a].y);
                 ctx.lineTo(particles[b].x, particles[b].y);
@@ -96,25 +119,37 @@ function connect() {
 
 function animate() {
     ctx.clearRect(0, 0, width, height);
+    
+    // Smoothly decay the scroll push effect
+    scrollVelocity *= 0.9;
+
+    // --- NEW: Dynamic Color Math ---
+    // Transitions from Sky Blue (Top) to Cyberpunk Pink/Red (Bottom)
+    let r = Math.floor(0 + (scrollPercent * 255));
+    let g = Math.floor(191 - (scrollPercent * 140));
+    let b = Math.floor(255 - (scrollPercent * 153));
+    
+    let dynamicColor = `rgba(${r}, ${g}, ${b}, 0.8)`; 
+
     for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
+        particles[i].update(dynamicColor);
     }
-    connect();
+    connect(r, g, b);
+    
     requestAnimationFrame(animate);
 }
 
 init();
 animate();
 
-// --- UPDATED MULTI-DIRECTIONAL SCROLL REVEAL ---
+// --- MULTI-DIRECTIONAL SCROLL REVEAL ---
 function reveal() {
-    // Selects all the different animation classes
     var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-zoom");
     
     for (var i = 0; i < reveals.length; i++) {
         var windowHeight = window.innerHeight;
         var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 50; // Triggers when element is slightly into view
+        var elementVisible = 50; 
         
         if (elementTop < windowHeight - elementVisible) {
             reveals[i].classList.add("active");
@@ -123,4 +158,4 @@ function reveal() {
 }
 
 window.addEventListener("scroll", reveal);
-reveal(); // Triggers once on page load to reveal the hero section
+reveal();
