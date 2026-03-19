@@ -31,21 +31,18 @@ nav {
 .nav-links a { color: var(--text-color); text-decoration: none; font-weight: 500; transition: 0.3s; }
 .nav-links a:hover { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
 
-/* HERO VIDEO FIX */
+/* LOCAL HERO VIDEO CSS */
 .hero {
     position: relative; height: 100vh; display: flex; align-items: center; padding: 0 5%;
     overflow: hidden; margin-top: -80px; z-index: 1;
-    background-color: #050505; /* Fallback color just in case */
+    background-color: #050505; /* Fallback color */
 }
 
-/* Forces the video to the absolute back and ensures it fills the screen */
 .hero-video {
-    position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%;
-    width: auto; height: auto; transform: translate(-50%, -50%);
-    object-fit: cover; z-index: -2; opacity: 0.85; /* Brightened up */
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: -2; opacity: 0.85;
 }
 
-/* Lightened the overlay so the video punches through clearly */
 .video-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(90deg, rgba(2,2,2,0.9) 0%, rgba(2,2,2,0.4) 50%, rgba(2,2,2,0.1) 100%);
@@ -54,15 +51,15 @@ nav {
 
 .hero-content { position: relative; z-index: 2; max-width: 700px; padding-top: 80px; }
 
-.hero-content h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 0.5rem; animation: fadeUp 1s ease-out; }
-.hero-content h2 { font-size: 2rem; font-weight: 300; color: #ccc; margin-bottom: 1.5rem; animation: fadeUp 1.2s ease-out backwards; }
+.hero-content h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 0.5rem; animation: fadeUp 0.8s ease-out; }
+.hero-content h2 { font-size: 2rem; font-weight: 300; color: #ccc; margin-bottom: 1.5rem; animation: fadeUp 1s ease-out backwards; }
 .highlight { color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
 .highlight-text { color: var(--accent); font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-.hero-content p { font-size: 1.1rem; color: #aaaaaa; margin-bottom: 2.5rem; line-height: 1.6; animation: fadeUp 1.4s ease-out backwards; }
+.hero-content p { font-size: 1.1rem; color: #aaaaaa; margin-bottom: 2.5rem; line-height: 1.6; animation: fadeUp 1.2s ease-out backwards; }
 
 .btn {
     padding: 12px 30px; background: transparent; color: var(--accent); text-decoration: none;
-    font-weight: bold; border-radius: 4px; transition: 0.4s; border: 2px solid var(--accent);
+    font-weight: bold; border-radius: 4px; transition: 0.3s; border: 2px solid var(--accent);
     display: inline-block; text-align: center; position: relative; overflow: hidden;
 }
 .btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 25px var(--accent-glow); transform: translateY(-3px); }
@@ -73,30 +70,23 @@ nav {
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2.5rem; }
 
-/* INTENSE CARD GLOW & HOVER EFFECTS */
+/* FAST CARD GLOW & HOVER EFFECTS */
 .card {
     background: rgba(15, 15, 18, 0.8); border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px; overflow: hidden; backdrop-filter: blur(10px);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    transition: all 0.25s ease-out; /* Sped up */
 }
-
-.card:hover { 
-    transform: translateY(-12px) scale(1.02); 
-    border-color: var(--accent); 
-    box-shadow: 0 15px 35px var(--accent-glow); 
-}
-
+.card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--accent); box-shadow: 0 15px 35px var(--accent-glow); }
 .prof-card { border-top: 3px solid var(--accent); }
-.card-img { height: 200px; width: 100%; transition: 0.4s; }
+.card-img { height: 200px; width: 100%; transition: 0.25s ease-out; }
 .card:hover .card-img { opacity: 0.8; }
 
-/* Adjusted gradient placeholders for the new theme */
 .bg-gradient-1 { background: linear-gradient(45deg, #0f2027, #203a43, #2c5364); }
-.bg-gradient-2 { background: linear-gradient(45deg, #000000, #0f9b0f); }
+.bg-gradient-2 { background: linear-gradient(45deg, #000000, #005A9C); }
 
 /* Video inside Cards */
 .video-container { width: 100%; height: 220px; overflow: hidden; background: #000; position: relative; }
-.video-container iframe { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; pointer-events: none; opacity: 0.7; transition: 0.5s ease; filter: grayscale(15%); }
+.video-container iframe { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; pointer-events: none; opacity: 0.7; transition: 0.4s ease; filter: grayscale(15%); }
 .card:hover .video-container iframe { opacity: 1; transform: scale(1.05); filter: grayscale(0%); }
 
 .card-info { padding: 1.5rem; }
@@ -105,24 +95,17 @@ nav {
 
 /* Dual Column Layout */
 .dual-column { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
-.timeline-item { background: rgba(15, 15, 18, 0.5); padding: 2rem; border-radius: 8px; border-left: 2px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; transition: 0.4s;}
+.timeline-item { background: rgba(15, 15, 18, 0.5); padding: 2rem; border-radius: 8px; border-left: 2px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; transition: 0.3s;}
 .timeline-item:hover { border-left-color: var(--accent); background: rgba(255, 255, 255, 0.03); box-shadow: -10px 0 20px -10px var(--accent-glow); transform: translateX(5px); }
 .timeline-item h3 { font-size: 1.5rem; margin-bottom: 0.3rem;}
 .timeline-item p { color: #ccc; line-height: 1.5; margin-top: 1rem; font-size: 0.95rem; }
 
-/* Contact & About Section */
+/* Contact Section & Profile Image */
 .contact-section { margin-bottom: 4rem; }
-
-/* SIZED & GLOWING PROFILE IMAGE */
 .profile-container { margin-bottom: 1.5rem; }
 .profile-pic {
-    width: 100px; 
-    height: 100px; 
-    border-radius: 50%; 
-    object-fit: cover;
-    border: 3px solid var(--accent); 
-    box-shadow: 0 0 20px var(--accent-glow); 
-    transition: transform 0.4s ease;
+    width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--accent); box-shadow: 0 0 20px var(--accent-glow); transition: transform 0.4s ease;
 }
 .profile-pic:hover { transform: scale(1.1) rotate(5deg); }
 
@@ -131,18 +114,14 @@ nav {
 .contact-card {
     background: rgba(15, 15, 18, 0.5); border: 1px solid rgba(255, 255, 255, 0.05);
     padding: 1.5rem; border-radius: 8px; text-decoration: none; color: var(--text-color);
-    transition: 0.4s ease; display: flex; flex-direction: column;
+    transition: 0.3s ease; display: flex; flex-direction: column;
 }
-.contact-card:hover {
-    background: rgba(255, 255, 255, 0.05); border-color: var(--accent);
-    transform: translateX(10px); box-shadow: -5px 5px 20px var(--accent-glow);
-}
+.contact-card:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--accent); transform: translateX(10px); box-shadow: -5px 5px 20px var(--accent-glow); }
 
-/* SCROLL REVEAL ANIMATION CLASSES */
-.reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+/* FAST SCROLL REVEAL ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(30px); transition: all 0.4s ease-out; }
 .reveal.active { opacity: 1; transform: translateY(0); }
 
-/* Footer */
 footer { text-align: center; padding: 2rem; background: rgba(2, 2, 2, 0.9); border-top: 1px solid rgba(255,255,255,0.05); color: #666; font-size: 0.9rem; }
 
 @media (max-width: 768px) {
