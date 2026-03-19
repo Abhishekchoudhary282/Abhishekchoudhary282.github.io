@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 
 let width, height;
 let particles = [];
-const mouse = { x: null, y: null, radius: 150 };
+const mouse = { x: null, y: null, radius: 180 }; // Increased radius for better interaction
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -27,7 +27,8 @@ class Particle {
     }
 
     draw() {
-        ctx.fillStyle = 'rgba(255, 51, 102, 0.5)';
+        // Updated to match the cool cyan/mint accent color
+        ctx.fillStyle = 'rgba(0, 255, 204, 0.4)'; 
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.closePath();
@@ -49,8 +50,8 @@ class Particle {
             const forceDirectionX = dx / distance;
             const forceDirectionY = dy / distance;
             const force = (mouse.radius - distance) / mouse.radius;
-            this.x -= forceDirectionX * force;
-            this.y -= forceDirectionY * force;
+            this.x -= forceDirectionX * force * 1.5; // Adds a bit more push
+            this.y -= forceDirectionY * force * 1.5;
         }
         this.draw();
     }
@@ -74,7 +75,7 @@ function connect() {
 
             if (distance < (width/12) * (height/12)) {
                 opacityValue = 1 - (distance / 12000);
-                ctx.strokeStyle = `rgba(255, 51, 102, ${opacityValue * 0.15})`;
+                ctx.strokeStyle = `rgba(0, 255, 204, ${opacityValue * 0.15})`;
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(particles[a].x, particles[a].y);
@@ -96,3 +97,24 @@ function animate() {
 
 init();
 animate();
+
+
+// --- NEW: SCROLL REVEAL ANIMATION LOGIC ---
+// This observes elements and adds the 'active' class when they enter the screen
+function reveal() {
+    var reveals = document.querySelectorAll(".reveal");
+
+    for (var i = 0; i < reveals.length; i++) {
+        var windowHeight = window.innerHeight;
+        var elementTop = reveals[i].getBoundingClientRect().top;
+        var elementVisible = 100; // Triggers when element is 100px into view
+
+        if (elementTop < windowHeight - elementVisible) {
+            reveals[i].classList.add("active");
+        }
+    }
+}
+
+window.addEventListener("scroll", reveal);
+// Trigger once on load to reveal elements already in view
+reveal();
