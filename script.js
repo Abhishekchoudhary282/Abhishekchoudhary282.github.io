@@ -1,75 +1,88 @@
-// --- 1. CUSTOM FLUID CURSOR ---
+// --- 0. DEVICE DETECTION ---
+// Check if the user is on a touch device (mobile/tablet)
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// --- 1. CUSTOM FLUID CURSOR (GPU Accelerated) ---
 const cursorDot = document.querySelector('.cursor-dot');
 const cursorOutline = document.querySelector('.cursor-outline');
 let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let outline = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    
-    // Instant dot movement
-    cursorDot.style.left = `${mouse.x}px`;
-    cursorDot.style.top = `${mouse.y}px`;
-});
+let outlineScale = 1;
+let outlineBg = 'transparent';
 
-// Smooth outline trailing loop
-function renderCursor() {
-    outline.x += (mouse.x - outline.x) * 0.15; // The trailing physics
-    outline.y += (mouse.y - outline.y) * 0.15;
-    cursorOutline.style.left = `${outline.x}px`;
-    cursorOutline.style.top = `${outline.y}px`;
-    requestAnimationFrame(renderCursor);
+// Only run custom cursor logic if NOT on a touch device
+if (!isTouchDevice) {
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        cursorDot.style.transform = `translate3d(${mouse.x}px, ${mouse.y}px, 0) translate(-50%, -50%)`;
+    });
+
+    function renderCursor() {
+        outline.x += (mouse.x - outline.x) * 0.15; 
+        outline.y += (mouse.y - outline.y) * 0.15;
+        
+        cursorOutline.style.transform = `translate3d(${outline.x}px, ${outline.y}px, 0) translate(-50%, -50%) scale(${outlineScale})`;
+        cursorOutline.style.backgroundColor = outlineBg;
+        
+        requestAnimationFrame(renderCursor);
+    }
+    renderCursor();
 }
-renderCursor();
 
-// --- 2. MAGNETIC ELEMENTS (Buttons & Logos) ---
+// --- 2. MAGNETIC ELEMENTS & CURSOR MORPHING ---
 const magnetics = document.querySelectorAll('.magnetic');
 magnetics.forEach(btn => {
-    btn.addEventListener('mousemove', function(e) {
-        const position = btn.getBoundingClientRect();
-        const x = e.pageX - position.left - position.width / 2;
-        const y = e.pageY - position.top - position.height / 2;
+    if (!isTouchDevice) {
+        btn.addEventListener('mouseenter', () => {
+            outlineScale = 1.5;
+            outlineBg = 'rgba(0, 229, 255, 0.05)';
+        });
         
-        btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
-        cursorOutline.style.transform = `translate(-50%, -50%) scale(1.5)`;
-        cursorOutline.style.backgroundColor = 'rgba(0, 229, 255, 0.1)';
-    });
-    btn.addEventListener('mouseout', function() {
-        btn.style.transform = `translate(0px, 0px)`;
-        cursorOutline.style.transform = `translate(-50%, -50%) scale(1)`;
-        cursorOutline.style.backgroundColor = 'transparent';
-    });
+        btn.addEventListener('mousemove', function(e) {
+            const position = btn.getBoundingClientRect();
+            const x = e.clientX - position.left - position.width / 2;
+            const y = e.clientY - position.top - position.height / 2;
+            btn.style.transform = `translate3d(${x * 0.3}px, ${y * 0.3}px, 0)`;
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            btn.style.transform = `translate3d(0px, 0px, 0)`;
+            outlineScale = 1;
+            outlineBg = 'transparent';
+        });
+    }
 });
 
-// --- 3. 3D CARD TILT & DYNAMIC GLOW ---
+// --- 3. 3D CARD TILT (Disabled on Mobile for better UX) ---
 const cards = document.querySelectorAll('.tilt-card');
 cards.forEach(card => {
-    const glow = card.querySelector('.card-glow');
-    
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left; // x position within the element.
-        const y = e.clientY - rect.top;  // y position within the element.
-        
-        // Move the glow to follow mouse
-        if(glow) {
-            glow.style.left = `${x}px`;
-            glow.style.top = `${y}px`;
-        }
+    // Only apply the 3D mouse tracking if on a desktop
+    if (!isTouchDevice) {
+        card.addEventListener('mouseenter', () => {
+            card.style.transitionDelay = '0s';
+            card.style.transition = 'transform 0.1s ease, box-shadow 0.3s ease, border-color 0.3s ease'; 
+        });
 
-        // Calculate 3D rotation
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = ((y - centerY) / centerY) * -5; // Max rotation 5deg
-        const rotateY = ((x - centerX) / centerX) * 5;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-    });
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left; 
+            const y = e.clientY - rect.top;  
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -5; 
+            const rotateY = ((x - centerX) / centerX) * 5;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        });
 
-    card.addEventListener('mouseleave', () => {
-        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
-    });
+        card.addEventListener('mouseleave', () => {
+            card.style.transition = 'transform 0.5s ease, box-shadow 0.3s ease, border-color 0.3s ease';
+            card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+        });
+    }
 });
 
 // --- 4. ADVANCED 3D WEBGL-STYLE CANVAS PARTICLES ---
@@ -86,66 +99,91 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+
+// Mobile touch support for particles
+window.addEventListener('touchstart', (e) => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+}, { passive: true });
+
+// Reset particle attraction when touch ends
+window.addEventListener('touchend', () => {
+    mouse.x = window.innerWidth / 2;
+    mouse.y = window.innerHeight / 2;
+});
 
 class Particle3D {
     constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.z = Math.random() * 1000 + 100; // Depth coordinate
-        this.baseSize = Math.random() * 3 + 1;
-        
-        // Flow field velocity
-        this.vx = (Math.random() - 0.5) * 1;
-        this.vy = (Math.random() - 0.5) * 1;
+        this.z = Math.random() * 1000 + 100; 
+        this.baseSize = Math.random() * 0.3 + 0.05; 
+        this.baseVx = (Math.random() - 0.5) * 0.02;
+        this.baseVy = (Math.random() - 0.5) * 0.02;
+        this.vx = this.baseVx;
+        this.vy = this.baseVy;
     }
 
     update() {
-        // Parallax effect on Z-axis based on scroll
         let screenY = this.y - (scrollY * (1000 / this.z) * 0.3);
-        
-        // Movement
-        this.x += this.vx * (1000 / this.z); // Objects closer (lower Z) move faster
-        
-        // Wrapping
-        if (this.x > width + 100) this.x = -100;
-        if (this.x < -100) this.x = width + 100;
-        
-        // Wrap Y taking scroll into account
-        if (screenY > height + 100) this.y -= (height + 200);
-        if (screenY < -100) this.y += (height + 200);
-
-        // Perspective Projection scale
         let scale = 1000 / this.z;
         let drawX = this.x;
         let drawY = screenY;
         let drawSize = this.baseSize * scale;
 
-        // Draw Particle with composite blooming
+        let dx = mouse.x - drawX;
+        let dy = mouse.y - drawY;
+        
+        let distSq = dx*dx + dy*dy;
+        // Smaller interaction radius on mobile
+        let interactionRadius = (isTouchDevice ? 150 : 250) * scale; 
+        let interactionRadiusSq = interactionRadius * interactionRadius;
+
+        if (distSq < interactionRadiusSq) {
+            let dist = Math.sqrt(distSq);
+            let force = (interactionRadius - dist) / interactionRadius;
+            this.vx += (dx / dist) * force * 0.002; 
+            this.vy += (dy / dist) * force * 0.002;
+        } else {
+            this.vx += (this.baseVx - this.vx) * 0.005; 
+            this.vy += (this.baseVy - this.vy) * 0.005;
+        }
+
+        let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        let maxSpeed = 0.2; 
+        if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+        }
+
+        this.x += this.vx * scale; 
+        this.y += this.vy * scale; 
+
+        screenY = this.y - (scrollY * scale * 0.3);
+        drawY = screenY;
+
+        if (this.x > width + 100) this.x = -100;
+        if (this.x < -100) this.x = width + 100;
+        if (screenY > height + 100) this.y -= (height + 200);
+        if (screenY < -100) this.y += (height + 200);
+
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = `rgba(0, 229, 255, ${0.8 * scale})`; 
+        ctx.fillStyle = `rgba(220, 250, 255, ${0.08 * scale})`; 
         ctx.beginPath();
         ctx.arc(drawX, drawY, drawSize, 0, Math.PI * 2);
         ctx.fill();
-
-        // Mouse interaction (Z-depth aware)
-        let dx = mouse.x - drawX;
-        let dy = mouse.y - drawY;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist < 150 * scale) {
-            ctx.strokeStyle = `rgba(255, 0, 127, ${1 - dist/(150*scale)})`;
-            ctx.lineWidth = 2 * scale;
-            ctx.beginPath();
-            ctx.moveTo(drawX, drawY);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.stroke();
-        }
     }
 }
 
 function initCanvas() {
     particles = [];
-    let particleCount = window.innerWidth < 768 ? 50 : 150; // Optimized for mobile
+    let particleCount = window.innerWidth < 768 ? 100 : 250; 
     for (let i = 0; i < particleCount; i++) {
         particles.push(new Particle3D());
     }
@@ -161,18 +199,22 @@ function animateCanvas() {
 initCanvas();
 animateCanvas();
 
-// --- 5. SCROLL OBSERVER (Triggers CSS Animations) ---
-function reveal() {
-    var reveals = document.querySelectorAll(".reveal-up, .reveal-left, .reveal-right, .reveal-3d");
-    for (var i = 0; i < reveals.length; i++) {
-        var windowHeight = window.innerHeight;
-        var elementTop = reveals[i].getBoundingClientRect().top;
-        var elementVisible = 100; // Only trigger when fully in view
-        
-        if (elementTop < windowHeight - elementVisible) {
-            reveals[i].classList.add("active");
+// --- 5. INTERSECTION OBSERVER ---
+const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.15 
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            observer.unobserve(entry.target); 
         }
-    }
-}
-window.addEventListener("scroll", reveal);
-reveal();
+    });
+}, observerOptions);
+
+document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-3d').forEach(el => {
+    observer.observe(el);
+});
