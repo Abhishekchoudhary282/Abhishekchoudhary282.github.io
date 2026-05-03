@@ -130,10 +130,10 @@ nav { display: flex; justify-content: space-between; padding: 1.5rem 5%; backgro
 .contact-card { background: rgba(10, 10, 12, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem 2rem; border-radius: 12px; text-decoration: none; color: var(--text-color); display: flex; flex-direction: column; position: relative; overflow: hidden; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
 .contact-card:hover { border-color: var(--accent); box-shadow: 0 0 30px var(--accent-glow); }
 
-.reveal-up { opacity: 0; transform: translateY(60px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; }
-.reveal-left { opacity: 0; transform: translateX(-80px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; }
-.reveal-right { opacity: 0; transform: translateX(80px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; }
-.reveal-3d { opacity: 0; transform: translateY(60px) rotateX(-20deg) scale(0.9); transform-origin: top center; transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; }
+.reveal-up { opacity: 0; transform: translateY(60px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; will-change: opacity, transform; }
+.reveal-left { opacity: 0; transform: translateX(-80px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; will-change: opacity, transform; }
+.reveal-right { opacity: 0; transform: translateX(80px); transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; will-change: opacity, transform; }
+.reveal-3d { opacity: 0; transform: translateY(60px) rotateX(-20deg) scale(0.9); transform-origin: top center; transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.8s ease; will-change: opacity, transform; }
 .active { opacity: 1; transform: translateY(0) translateX(0) rotateX(0) scale(1); }
 
 footer { text-align: center; padding: 3rem; background: rgba(2, 2, 2, 0.95); border-top: 1px solid rgba(255,255,255,0.05); color: #555; font-size: 0.9rem; letter-spacing: 1px; }
@@ -143,6 +143,10 @@ footer { text-align: center; padding: 3rem; background: rgba(2, 2, 2, 0.95); bor
     .cursor-dot, .cursor-outline { display: none; }
     * { cursor: auto; }
     
+    .noise-overlay { display: none; }
+    nav { backdrop-filter: none; background: rgba(2, 2, 2, 0.95); }
+    .card { backdrop-filter: none; background: rgba(15, 15, 18, 0.95); }
+
     .hero-content h1 { font-size: 2.8rem; }
     .hero-content h2 { font-size: 1.5rem; }
     

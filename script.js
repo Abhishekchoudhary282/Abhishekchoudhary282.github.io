@@ -88,6 +88,7 @@ cards.forEach(card => {
 // --- 4. ADVANCED 3D WEBGL-STYLE CANVAS PARTICLES ---
 const canvas = document.getElementById('bg-canvas');
 const ctx = canvas.getContext('2d');
+const TWO_PI = Math.PI * 2;
 let width, height;
 let particles = [];
 let scrollY = window.scrollY;
@@ -155,11 +156,12 @@ class Particle3D {
             this.vy += (this.baseVy - this.vy) * 0.005;
         }
 
-        let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        let maxSpeed = 0.2; 
-        if (speed > maxSpeed) {
-            this.vx = (this.vx / speed) * maxSpeed;
-            this.vy = (this.vy / speed) * maxSpeed;
+        let speedSq = this.vx * this.vx + this.vy * this.vy;
+        let maxSpeedSq = 0.04; // 0.2 * 0.2
+        if (speedSq > maxSpeedSq) {
+            let speed = Math.sqrt(speedSq);
+            this.vx = (this.vx / speed) * 0.2;
+            this.vy = (this.vy / speed) * 0.2;
         }
 
         this.x += this.vx * scale; 
@@ -176,7 +178,7 @@ class Particle3D {
         ctx.globalCompositeOperation = 'lighter';
         ctx.fillStyle = `rgba(220, 250, 255, ${0.08 * scale})`; 
         ctx.beginPath();
-        ctx.arc(drawX, drawY, drawSize, 0, Math.PI * 2);
+        ctx.arc(drawX, drawY, drawSize, 0, TWO_PI);
         ctx.fill();
     }
 }
@@ -189,13 +191,26 @@ function initCanvas() {
     }
 }
 
+let isAnimating = true;
+
 function animateCanvas() {
+    if (!isAnimating) return;
     ctx.clearRect(0, 0, width, height);
     for (let i = 0; i < particles.length; i++) {
         particles[i].update();
     }
     requestAnimationFrame(animateCanvas);
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        isAnimating = false;
+    } else {
+        isAnimating = true;
+        animateCanvas();
+    }
+});
+
 initCanvas();
 animateCanvas();
 
